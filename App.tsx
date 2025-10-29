@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+// Fix: Correct import path
 import { LeftPanel } from './components/LeftPanel';
+// Fix: Correct import path
 import { CenterPanel } from './components/CenterPanel';
 import { ApiKeyModal } from './components/ApiKeyModal';
 import type { MediaAsset, ChatMessage, AgentMode, AspectRatio, TTSVoice, AttachedFile, TimelineAsset, GenerationConstraints } from './types';
