@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import type { MediaAsset, TTSVoice } from '../types';
 import { Icon } from './Icon';
@@ -6,7 +7,7 @@ import { Icon } from './Icon';
 interface LeftPanelProps {
   onSelectAsset: (asset: MediaAsset) => void;
   assets: MediaAsset[];
-  onAddAsset: (asset: Omit<MediaAsset, 'id'|'duration'>) => Promise<void>;
+  onAddAsset: (asset: Omit<MediaAsset, 'id'|'duration'>) => void;
   onTtsGenerate: (text: string, voice: TTSVoice) => void;
 }
 
@@ -40,12 +41,12 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({ onSelectAsset, assets, onA
     if (file) {
       const base64Reader = new FileReader();
       base64Reader.readAsDataURL(file);
-      base64Reader.onload = async () => {
+      base64Reader.onload = () => {
         const base64 = (base64Reader.result as string).split(',')[1];
         const url = URL.createObjectURL(file);
         const type = file.type.startsWith('image') ? 'image' : file.type.startsWith('video') ? 'video' : 'audio';
         if (type === 'image' || type === 'video' || type === 'audio') {
-          await onAddAsset({ type, url, base64, mimeType: file.type, prompt: file.name });
+          onAddAsset({ type, url, base64, mimeType: file.type, prompt: file.name });
         }
       };
     }

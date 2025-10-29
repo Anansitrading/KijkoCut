@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import type { MediaAsset, TimelineAsset } from '../types';
 import { Icon } from './Icon';
@@ -13,6 +12,13 @@ interface CenterPanelProps {
   onRemoveFromTimeline: (timelineId: string) => void;
   onUpdateTimelineAsset: (timelineId: string, updates: Partial<TimelineAsset>) => void;
   onAssetSelectForEdit: (asset: MediaAsset) => void;
+}
+
+interface TimelineClipItemProps {
+    asset: TimelineAsset;
+    zoom: number;
+    onUpdate: (id: string, updates: Partial<TimelineAsset>) => void;
+    onRemove: (id: string) => void;
 }
 
 const formatTime = (time: number, totalDuration: number) => {
@@ -51,11 +57,16 @@ export const CenterPanel: React.FC<CenterPanelProps> = ({
   }, [timelineAssets]);
 
   const activeAsset = useMemo(() => {
-    if ('timelineId' in (previewAsset || {})) return previewAsset; // If a timeline asset is clicked, show it
+    // If a timeline asset is clicked for preview, show it
+    if (previewAsset && 'timelineId' in previewAsset) return previewAsset;
+
+    // Find the asset currently playing on the timeline
     const playingAsset = timelineAssets.find(asset => {
         const effectiveDuration = (asset.duration || 0) - asset.trimStart - asset.trimEnd;
         return currentTime >= asset.startTime && currentTime < asset.startTime + effectiveDuration;
     });
+
+    // Fallback to the library preview asset if nothing is playing
     return playingAsset || previewAsset;
   }, [currentTime, timelineAssets, previewAsset]);
 
@@ -71,17 +82,19 @@ export const CenterPanel: React.FC<CenterPanelProps> = ({
     const element = activeAsset.type === 'video' ? video : activeAsset.type === 'audio' ? audio : null;
     if (!element) return;
     
-    // Fix: Using `startTime` as a type guard is more effective for TypeScript to narrow the union type
-    // of interfaces than using `timelineId`, as `startTime` is unique to `TimelineAsset`.
-    const isTimelineAsset = 'startTime' in activeAsset;
-    
-    if (isTimelineAsset && activeAsset.url !== element.src) {
+    // Set the source if it has changed
+    if (activeAsset.url !== element.src) {
         element.src = activeAsset.url;
     }
 
     if (isPlaying) {
-        if(isTimelineAsset) {
-          const effectiveTime = currentTime - activeAsset.startTime + activeAsset.trimStart;
+        // FIX: Use 'timelineId' in activeAsset as a type guard. This correctly narrows
+        // `activeAsset` to `TimelineAsset`, because `timelineId` is a property unique
+        // to `TimelineAsset`, ensuring correct type inference.
+        if('timelineId' in activeAsset) {
+          // Fix: Explicitly cast activeAsset to TimelineAsset as the type guard is insufficient.
+          const timelineAsset = activeAsset as TimelineAsset;
+          const effectiveTime = currentTime - timelineAsset.startTime + timelineAsset.trimStart;
           if (Math.abs(element.currentTime - effectiveTime) > 0.2) {
               element.currentTime = effectiveTime;
           }
@@ -113,7 +126,7 @@ export const CenterPanel: React.FC<CenterPanelProps> = ({
   const togglePlay = () => setIsPlaying(!isPlaying);
   
   const handleAssetClick = () => {
-    if(previewAsset) onAssetSelectForEdit(previewAsset);
+    if(previewAsset && !('timelineId' in previewAsset)) onAssetSelectForEdit(previewAsset);
   }
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -234,15 +247,8 @@ export const CenterPanel: React.FC<CenterPanelProps> = ({
   );
 };
 
-// Fix: Replaced inline prop type definition with a dedicated interface to resolve a TypeScript error.
-interface TimelineClipItemProps {
-    asset: TimelineAsset;
-    zoom: number;
-    onUpdate: (id: string, updates: Partial<TimelineAsset>) => void;
-    onRemove: (id: string) => void;
-}
 
-const TimelineClipItem = ({ asset, zoom, onUpdate, onRemove }: TimelineClipItemProps) => {
+const TimelineClipItem: React.FC<TimelineClipItemProps> = ({ asset, zoom, onUpdate, onRemove }) => {
     const effectiveDuration = (asset.duration || 0) - asset.trimStart - asset.trimEnd;
     const width = effectiveDuration * PIXELS_PER_SECOND * zoom;
     const [resizeState, setResizeState] = useState<{side: 'left' | 'right', startX: number} | null>(null);

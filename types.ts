@@ -1,4 +1,26 @@
+// All type definitions for the application
 
+// Media and Timeline
+export interface MediaAsset {
+  id: string;
+  type: 'image' | 'video' | 'audio';
+  url: string;
+  base64?: string;
+  mimeType?: string;
+  prompt?: string;
+  selectedForEdit?: boolean;
+  parentAssetId?: string;
+  duration?: number; // Original duration of the media
+}
+
+export interface TimelineAsset extends MediaAsset {
+  timelineId: string; // unique ID for this instance on the timeline
+  startTime: number; // in seconds
+  trimStart: number; // in seconds, from the start of the media
+  trimEnd: number; // in seconds, from the end of the media
+}
+
+// AI Generation Panel (formerly Gemini types)
 export interface AttachedFile {
   id: string; // UUID for tracking
   file: File; // Original file object
@@ -29,25 +51,6 @@ export interface GenerationConstraints {
   isValid: boolean;
 }
 
-export interface MediaAsset {
-  id: string;
-  type: 'image' | 'video' | 'audio';
-  url: string;
-  base64?: string;
-  mimeType?: string;
-  prompt?: string;
-  selectedForEdit?: boolean;
-  parentAssetId?: string;
-  duration?: number; // Original duration of the media
-}
-
-export interface TimelineAsset extends MediaAsset {
-  timelineId: string; // unique ID for this instance on the timeline
-  startTime: number; // in seconds
-  trimStart: number; // in seconds, from the start of the media
-  trimEnd: number; // in seconds, from the end of the media
-}
-
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
@@ -69,5 +72,4 @@ export type AgentMode =
 
 export type AspectRatio = '1:1' | '16:9' | '9:16' | '4:3' | '3:4';
 
-// Fix: Removed 'Heart' as it is not a valid prebuilt voice.
 export type TTSVoice = 'Kore' | 'Puck' | 'Charon' | 'Fenrir' | 'Zephyr';

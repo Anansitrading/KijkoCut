@@ -146,16 +146,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     const [processedItem] = await processMediaFiles([file]);
 
     if (processedItem) {
-      const newItem: MediaFile = {
-        ...processedItem,
-        id: generateUUID(),
-        prompt: item.prompt,
-      };
-
-      set((state) => ({
-        mediaFiles: [...state.mediaFiles, newItem],
-      }));
-      await storageService.saveMediaFile({ projectId, mediaItem: newItem });
+        await get().addMediaFile(projectId, { ...processedItem, prompt: item.prompt });
     }
   },
 

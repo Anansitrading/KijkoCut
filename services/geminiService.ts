@@ -1,7 +1,7 @@
-// lib/geminiService.ts
+// services/geminiService.ts
 import { GoogleGenAI, Modality, Type, VideoGenerationReferenceType } from '@google/genai';
 import type { GenerateContentResponse, LiveSession, LiveServerMessage } from '@google/genai';
-import type { AspectRatio, TTSVoice, AgentMode, GenerationConstraints, GenerationType } from '../types/gemini';
+import type { AspectRatio, TTSVoice, AgentMode, GenerationConstraints, GenerationType } from '../types';
 
 const getAiClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 

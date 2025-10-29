@@ -1,15 +1,11 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { useProjectStore } from "@/stores/project-store";
 import { useMediaStore } from "@/stores/media-store";
 import { toast } from "sonner";
 import * as geminiService from '@/lib/geminiService';
 import { AgentMode, AspectRatio, AttachedFile, ChatMessage, GenerationConstraints } from '@/types/gemini';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Mic, Paperclip, Send, Sparkles, X } from 'lucide-react';
 import { MediaFile } from '@/types/media';
 
@@ -75,7 +71,7 @@ export function GenerateView() {
                 const { base64, url } = await geminiService.generateImage(prompt, aspectRatio);
                 const imageBlob = await geminiService.dataUrlToBlob(url);
                 await addGeneratedMedia(activeProject.id, {
-                    name: prompt.slice(0, 20),
+                    name: prompt.slice(0, 20) || 'Generated Image',
                     blob: imageBlob,
                     type: 'image',
                     prompt: prompt,
@@ -87,7 +83,7 @@ export function GenerateView() {
                  const videoUrl = await geminiService.generateVideo({ prompt, aspectRatio });
                  const videoBlob = await geminiService.dataUrlToBlob(videoUrl);
                  await addGeneratedMedia(activeProject.id, {
-                     name: prompt.slice(0, 20),
+                     name: prompt.slice(0, 20) || 'Generated Video',
                      blob: videoBlob,
                      type: 'video',
                      prompt: prompt,
@@ -141,27 +137,22 @@ export function GenerateView() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-panel">
-        <div className="p-4 border-b">
-            <h3 className="font-semibold flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Generation Agent</h3>
+    <div className="h-full flex flex-col bg-gray-800 text-gray-200">
+        <div className="p-4 border-b border-gray-700">
+            <h3 className="font-semibold flex items-center gap-2"><Sparkles className="h-4 w-4 text-indigo-400" /> Generation Agent</h3>
              <div className="mt-4">
-                <Select value={mode} onValueChange={v => setMode(v as AgentMode)}>
-                    <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select mode" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="chat">Auto-Detect</SelectItem>
-                        <SelectItem value="image">Image Gen</SelectItem>
-                        <SelectItem value="video">Video Gen</SelectItem>
-                    </SelectContent>
-                </Select>
+                <select value={mode} onChange={e => setMode(e.target.value as AgentMode)} className="w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="chat">Auto-Detect</option>
+                    <option value="image">Image Gen</option>
+                    <option value="video">Video Gen</option>
+                </select>
             </div>
         </div>
-      <ScrollArea className="flex-1 p-4">
+      <div className="flex-1 p-4 overflow-y-auto space-y-4">
         <div className="space-y-4">
           {chatHistory.map((msg, index) => (
             <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`p-3 rounded-lg max-w-sm ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-card'}`}>
+              <div className={`p-3 rounded-lg max-w-sm ${msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-700'}`}>
                 <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                 {msg.mediaUrl && (
                   <img src={msg.mediaUrl} alt="generated media" className="mt-2 rounded-md max-h-48" />
@@ -171,30 +162,30 @@ export function GenerateView() {
           ))}
           {isLoading && (
             <div className="flex justify-start">
-                <div className="p-3 rounded-lg bg-card flex items-center space-x-2">
+                <div className="p-3 rounded-lg bg-gray-700 flex items-center space-x-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span className="text-sm text-muted-foreground">{loadingMessage || "Thinking..."}</span>
                 </div>
             </div>
           )}
         </div>
-      </ScrollArea>
-      <div className="p-4 border-t">
+      </div>
+      <div className="p-4 border-t border-gray-700">
         <form onSubmit={handleSubmit} className="space-y-2">
            <FileAttachment attachedFiles={attachedFiles} onFilesAdded={handleFilesAdded} onFileRemoved={handleFileRemoved} constraints={generationConstraints} />
-           <div className="flex items-center gap-2 bg-background rounded-md border p-1">
-             <Input 
+           <div className="flex items-center gap-2 bg-gray-700 rounded-md border border-gray-600 p-1">
+             <input 
                 type="text" 
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Type your prompt..."
-                className="flex-1 bg-transparent border-0 ring-0 focus-visible:ring-0"
+                className="flex-1 bg-transparent px-3 py-2 text-sm outline-none focus:ring-0 border-0"
                 disabled={isLoading}
              />
-             <Button type="button" variant="text" size="icon" disabled={isLoading}><Mic className="h-4 w-4" /></Button>
-             <Button type="submit" size="icon" disabled={isLoading || !prompt.trim() || !generationConstraints.isValid}>
+             <button type="button" className="p-2 rounded-md hover:bg-gray-600 disabled:opacity-50" disabled={isLoading}><Mic className="h-4 w-4" /></button>
+             <button type="submit" className="p-2 rounded-md bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-500 disabled:cursor-not-allowed" disabled={isLoading || !prompt.trim() || !generationConstraints.isValid}>
                 <Send className="h-4 w-4" />
-             </Button>
+             </button>
            </div>
         </form>
       </div>
@@ -240,11 +231,11 @@ const FileAttachment: React.FC<{
         accept="image/*"
         className="hidden" 
       />
-      <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+      <button type="button" className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-xs font-medium transition-colors h-8 px-3 border border-gray-600 bg-transparent shadow-xs hover:opacity-75" onClick={() => fileInputRef.current?.click()}>
         <Paperclip className="h-4 w-4 mr-2" />
         Attach Files ({constraints.currentCount}/{constraints.maxImages})
-      </Button>
-       {constraints.validationMessage && <p className="text-xs text-destructive mt-1">{constraints.validationMessage}</p>}
+      </button>
+       {constraints.validationMessage && <p className="text-xs text-red-400 mt-1">{constraints.validationMessage}</p>}
     </div>
   )
 };
