@@ -1,0 +1,8 @@
+{
+  "name": "OpenCut with Kijko AI",
+  "description": "A powerful AI-driven video production studio to generate and edit video, images, and voiceovers using Gemini, integrated into the OpenCut video editor.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
